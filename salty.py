@@ -1,5 +1,6 @@
 import requests, time, pickle
 from lxml import html
+from character import Character
 
 urlJSON = "http://www.saltybet.com/state.json"
 urlWEB = "http://www.saltybet.com/"
@@ -62,13 +63,13 @@ def getBalance(r):
 
 def bet(p1,p2):
     
-    if p1 in betting_data:
-        count_p1 = betting_data[p1].count(p2)
+    #if p1 in betting_data:
+        #count_p1 = betting_data[p1].won.count(p2)
 
-    if p2 in betting_data:
-        count_p2 = betting_data[p2].count(p2)
+    #if p2 in betting_data:
+        #count_p2 = betting_data[p2].won.count(p2)
 
-    if count_p1 >= count_p2:
+    if betting_data[p1].win / betting_data[p1].loss >= betting_data[p2].win / betting_data[p2].loss:
         bet_payload['selectedplayer'] = 'player1'
     else:
         bet_payload['selectedplayer'] = 'player2'
@@ -88,9 +89,9 @@ p1 = data['p1name']
 p2 = data['p2name']
 
 if p1 not in betting_data:
-    betting_data[p1] = []
+    betting_data[p1] = Character()
 if p2 not in betting_data:
-    betting_data[p2] = []
+    betting_data[p2] = Character()
 
 while(True):  
     data = waitForMatchEnd(s)
@@ -99,31 +100,29 @@ while(True):
     
     balance = getBalance(results)
 
-    if data['status'] == '1':
-        win_pct['win'] = win_pct['win'] + 1
-        betting_data[p1].append(p2)
+    if data['status'] == '1':   
+        betting_data[p1].won(p2,0)
         print(p1," won!")
                
     if data['status'] == '2':
-        win_pct['loss'] = win_pct['loss'] + 1
-        betting_data[p2].append(p1)
+        betting_data[p2].won(p1,0)
         print(p2," won!")
     
-    saveBettingData()
+    #saveBettingData()
     
     data = requests.get(urlJSON).json()
     
     p1 = data['p1name']
     p2 = data['p2name']
     if p1 not in betting_data:
-        betting_data[p1] = []
+        betting_data[p1] = Character()
     if p2 not in betting_data:
-        betting_data[p2] = []
+        betting_data[p2] = Character()
         
     bet(p1,p2)
     print(data['p1name'], " vs ", data['p2name'])
-    print(p1,": ",betting_data[p1])
-    print(p2,": ",betting_data[p2])
+    print(p1,": ",betting_data[p1].win,"/",betting_data[p1].loss)
+    print(p2,": ",betting_data[p2].win,"/",betting_data[p2].loss)
     
     print("\nSent POST: ",bet_payload)
     
