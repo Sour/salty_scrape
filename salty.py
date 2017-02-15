@@ -47,6 +47,7 @@ def waitForMatchEnd(s):
         data = requests.get(urlJSON).json()
         time.sleep(2)
     time.sleep(3)
+    data['time'] = time.time()
     return data
 
 def waitForMatchStart():
@@ -55,22 +56,26 @@ def waitForMatchStart():
     while data['status'] != 'locked':
         data = requests.get(urlJSON).json()
         time.sleep(2)
-    return
-
-def getBalance(r):
-    tree = html.fromstring(r.content)
-    return tree.xpath('//span[@class="dollar"]/text()')[0]
+    return time.time()
 
 def bet(p1,p2):
+    bet_weight = 1
     
-    #if p1 in betting_data:
-        #count_p1 = betting_data[p1].won.count(p2)
-
-    #if p2 in betting_data:
-        #count_p2 = betting_data[p2].won.count(p2)
-
-    if betting_data[p1].win / betting_data[p1].loss >= betting_data[p2].win / betting_data[p2].loss:
+    p1_games_played = p1.loss + p1.win
+    p2_games_played = p2.loss + p2.win
+    
+    if p1_games_played == 0 or p2_games_played == 0:
+        
         bet_payload['selectedplayer'] = 'player1'
+    elif p1.win / p1.loss > p2.win / p2.loss:
+        bet_payload['selectedplayer'] = 'player1'
+    elif p1_PCT == p2_PCT:
+        if p1.avg_win > p2.avg_win:
+            bet_payload['selectedplayer'] = 'player1'
+        elif p1.avg_loss > p2.avg_loss:
+            bet_payload['selectedplayer'] = 'player1'
+        else:
+            bet_payload['selectedplayer'] = 'player2'
     else:
         bet_payload['selectedplayer'] = 'player2'
 
@@ -82,9 +87,8 @@ results = s.get(urlLOGIN)
 #login
 results = s.post(urlLOGIN, login_payload, dict(referer = urlLOGIN))
 
+data = waitForMatchEnd(s)
 data = requests.get(urlJSON).json()
-balance = getBalance(results)
-
 p1 = data['p1name']
 p2 = data['p2name']
 
@@ -93,36 +97,24 @@ if p1 not in betting_data:
 if p2 not in betting_data:
     betting_data[p2] = Character()
 
-while(True):  
-    data = waitForMatchEnd(s)
+while(True):
 
-    results = s.get(urlWEB)
-    
-    balance = getBalance(results)
-
-    if data['status'] == '1':   
-        betting_data[p1].won(p2,0)
-        print(p1," won!")
-               
-    if data['status'] == '2':
-        betting_data[p2].won(p1,0)
-        print(p2," won!")
-    
-    #saveBettingData()
-    
     data = requests.get(urlJSON).json()
     
     p1 = data['p1name']
     p2 = data['p2name']
+    
     if p1 not in betting_data:
         betting_data[p1] = Character()
     if p2 not in betting_data:
         betting_data[p2] = Character()
-        
-    bet(p1,p2)
-    print(data['p1name'], " vs ", data['p2name'])
-    print(p1,": ",betting_data[p1].win,"/",betting_data[p1].loss)
-    print(p2,": ",betting_data[p2].win,"/",betting_data[p2].loss)
+
+    bet(betting_data[p1], betting_data[p2])
+    print(p1, " vs ", p2,"\m")
+    print(p1,"\n")
+    betting_data[p1].print()
+    print(p2,"\n")
+    betting_data[p2].print()
     
     print("\nSent POST: ",bet_payload)
     
@@ -130,8 +122,33 @@ while(True):
     
     print("POST Response:", r_bet.status_code, r_bet.reason,"\n")
 
-    print(betting_data)
-    waitForMatchStart()
+    time_start = waitForMatchStart()
+    
+    data = waitForMatchEnd(s)
+
+    time_end = data['time']
+
+    results = s.get(urlWEB)
+
+    if data['status'] == '1':   
+        betting_data[p1]._won(p2,time_end-time_start)
+        betting_data[p2]._lost(p1,time_end-time_start)
+        print(p1," won!")
+               
+    if data['status'] == '2':
+        betting_data[p2]._won(p1,time_end-time_start)
+        betting_data[p1]._lost(p2,time_end-time_start)
+        print(p2," won!")
+
+    print("\n",p1,"\n")
+    betting_data[p1].print()
+    print(p2,"\n")
+    betting_data[p2].print()
+
+    
+    saveBettingData()
+    
+  
 
 
 
