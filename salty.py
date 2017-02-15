@@ -67,7 +67,7 @@ def bet(p1,p2):
     if p1_games_played == 0 or p2_games_played == 0:
         
         bet_payload['selectedplayer'] = 'player1'
-    elif p1.win / p1.loss > p2.win / p2.loss:
+    elif p1.win / p1_games_played > p2.win / p2_games_played:
         bet_payload['selectedplayer'] = 'player1'
     elif p1_PCT == p2_PCT:
         if p1.avg_win > p2.avg_win:
@@ -110,7 +110,6 @@ while(True):
         betting_data[p2] = Character()
 
     bet(betting_data[p1], betting_data[p2])
-    print(p1, " vs ", p2,"\m")
     print(p1,"\n")
     betting_data[p1].print()
     print(p2,"\n")

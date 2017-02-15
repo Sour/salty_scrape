@@ -15,7 +15,7 @@ class Character():
         if self.win != 0:
             self.avg_loss = (((self.loss - 1) * self.avg_loss) + time) / self.loss
         else:
-            self.avg_win = time
+            self.avg_loss = time
         
     def _won(self, character, time):
         self.win += 1
