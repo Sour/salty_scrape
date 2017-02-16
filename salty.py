@@ -68,13 +68,13 @@ def bet(p1,p2):
     if p1_games_played > 0 and p2_games_played > 0:
         
         if p1.win > 0:
-            p1_confidence += -log10(p1.avg_win/180) * 200
+            p1_confidence += -log10(p1.avg_win/300) * 100
             p1_confidence += p1.avg_loss * p1.win/p1_games_played
         else:
             p1_confidence += p1.avg_loss * p1.win/p1_games_played
 
         if p1.win > 0:
-            p2_confidence += -log10(p2.avg_win/180) * 200
+            p2_confidence += -log10(p2.avg_win/300) * 100
             p2_confidence += p2.avg_loss * p2.win/p2_games_played
         else:
             p2_confidence += p1.avg_loss * p2.win/p2_games_played
@@ -82,7 +82,7 @@ def bet(p1,p2):
     elif p1_games_played > 0:
         
         if p1.win > 0:
-            p1_confidence += -log10(p1.avg_win/180) * 200
+            p1_confidence += -log10(p1.avg_win/300) * 100
             p1_confidence += p1.avg_loss * p1.win/p1_games_played
         else:
             p1_confidence += p1.avg_loss * p1.win/p1_games_played
@@ -91,7 +91,7 @@ def bet(p1,p2):
     elif p2_games_played > 0:
         p1_confidence = 0
         if p1.win > 0:
-            p2_confidence += -log10(p2.avg_win/180) * 200
+            p2_confidence += -log10(p2.avg_win/300) * 100
             p2_confidence += p2.avg_loss * p2.win/p2_games_played
         else:
             p2_confidence += p1.avg_loss * p2.win/p2_games_played
