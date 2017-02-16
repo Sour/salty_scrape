@@ -12,7 +12,7 @@ class Character():
     def _lost(self, character, time):
         self.loss += 1
         self.lost.append(character)
-        time = max(time,300)
+        time = max(0,min(time,300))
         if self.win != 0:
             self.avg_loss = (((self.loss - 1) * self.avg_loss) + time) / self.loss
         else:
@@ -21,7 +21,7 @@ class Character():
     def _won(self, character, time):
         self.win += 1
         self.won.append(character)
-        time = max(time,300)
+        time = max(0,min(time,300))
         if self.win != 0:
             self.avg_win = (((self.win - 1) * self.avg_win) + time) / self.win
         else:
