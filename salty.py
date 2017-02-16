@@ -1,6 +1,7 @@
 import requests, time, pickle
 from lxml import html
 from character import Character
+from math import log10
 
 urlJSON = "http://www.saltybet.com/state.json"
 urlWEB = "http://www.saltybet.com/"
@@ -59,25 +60,51 @@ def waitForMatchStart():
     return time.time()
 
 def bet(p1,p2):
-    bet_weight = 1
-    
     p1_games_played = p1.loss + p1.win
     p2_games_played = p2.loss + p2.win
-    
-    if p1_games_played == 0 or p2_games_played == 0:
+    p1_confidence = 0
+    p2_confidence = 0
+
+    if p1_games_played > 0 and p2_games_played > 0:
         
-        bet_payload['selectedplayer'] = 'player1'
-    elif p1.win / p1_games_played > p2.win / p2_games_played:
-        bet_payload['selectedplayer'] = 'player1'
-    elif p1_PCT == p2_PCT:
-        if p1.avg_win > p2.avg_win:
-            bet_payload['selectedplayer'] = 'player1'
-        elif p1.avg_loss > p2.avg_loss:
-            bet_payload['selectedplayer'] = 'player1'
+        if p1.win > 0:
+            p1_confidence += -log10(p1.avg_win/180) * 200
+            p1_confidence += p1.avg_loss * p1.win/p1_games_played
         else:
-            bet_payload['selectedplayer'] = 'player2'
+            p1_confidence += p1.avg_loss * p1.win/p1_games_played
+
+        if p1.win > 0:
+            p2_confidence += -log10(p2.avg_win/180) * 200
+            p2_confidence += p2.avg_loss * p2.win/p2_games_played
+        else:
+            p2_confidence += p1.avg_loss * p2.win/p2_games_played
+            
+    elif p1_games_played > 0:
+        
+        if p1.win > 0:
+            p1_confidence += -log10(p1.avg_win/180) * 200
+            p1_confidence += p1.avg_loss * p1.win/p1_games_played
+        else:
+            p1_confidence += p1.avg_loss * p1.win/p1_games_played
+            
+        p2_confidence = 0
+    elif p2_games_played > 0:
+        p1_confidence = 0
+        if p1.win > 0:
+            p2_confidence += -log10(p2.avg_win/180) * 200
+            p2_confidence += p2.avg_loss * p2.win/p2_games_played
+        else:
+            p2_confidence += p1.avg_loss * p2.win/p2_games_played
+
+
+    print("p1 Confidence: ", p1_confidence)
+    print("p2 Confidence: ", p2_confidence)
+
+    if p1_confidence >= p2_confidence:
+        bet_payload['selectedplayer'] = 'player1'
     else:
         bet_payload['selectedplayer'] = 'player2'
+        
 
 betting_data = openBettingData()
 
@@ -146,6 +173,7 @@ while(True):
 
     
     saveBettingData()
+    print("---------------------------------------------------------")
     
   
 
