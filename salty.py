@@ -7,6 +7,7 @@ urlJSON = "http://www.saltybet.com/state.json"
 urlWEB = "http://www.saltybet.com/"
 urlLOGIN = 'http://www.saltybet.com/authenticate?signin=1'
 urlBET = 'http://www.saltybet.com/ajax_place_bet.php'
+urlSTATS = 'http://www.saltybet.com/ajax_get_stats.php'
 
 login_payload = {
     'email': "mechanicfreak440@gmail.com",
@@ -68,14 +69,14 @@ def bet(p1,p2):
     if p1_games_played > 0 and p2_games_played > 0:
         
         if p1.win > 0:
-            p1_confidence += (300 - p1.avg_win) - 150
+            p1_confidence += (300 - p1.avg_win)
         else:
-            p1_confidence += (150 - p1.avg_loss)
+            p1_confidence += (p1.avg_loss - 150)
             
         if p2.win > 0:
-            p2_confidence += (300 - p2.avg_win) - 150
+            p2_confidence += (300 - p2.avg_win)
         else:
-            p2_confidence += (150 - p1.avg_loss)
+            p2_confidence += (p1.avg_loss - 150)
 
         p1_confidence += p1_confidence * (p1.win /p1_games_played)
         p2_confidence += p2_confidence * (p2.win /p2_games_played)    
@@ -83,18 +84,18 @@ def bet(p1,p2):
         p2_confidence = 0
         
         if p1.win > 0:
-            p1_confidence += (300 - p1.avg_win) - 150
+            p1_confidence += (300 - p1.avg_win)
         else:
-            p1_confidence += (150 - p1.avg_loss)
+            p1_confidence += (p1.avg_loss - 150)
             
         p1_confidence += p1_confidence * (p1.win /p1_games_played)
         
     elif p2_games_played > 0:
         p1_confidence = 0
         if p2.win > 0:
-            p2_confidence += (300 - p2.avg_win) - 150
+            p2_confidence += (300 - p2.avg_win)
         else:
-            p2_confidence += (150 - p1.avg_loss)
+            p2_confidence += (p1.avg_loss - 150)
             
         p2_confidence += p2_confidence * (p2.win /p2_games_played)
 
@@ -115,6 +116,9 @@ results = s.get(urlLOGIN)
 #login
 results = s.post(urlLOGIN, login_payload, dict(referer = urlLOGIN))
 
+test = requests.get(urlSTATS)
+print(test.text)
+
 data = waitForMatchEnd(s)
 data = requests.get(urlJSON).json()
 p1 = data['p1name']
@@ -128,6 +132,7 @@ if p2 not in betting_data:
 while(True):
 
     data = requests.get(urlJSON).json()
+    
     
     p1 = data['p1name']
     p2 = data['p2name']

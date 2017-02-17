@@ -1,5 +1,3 @@
-from math import ceil, floor
-
 class Character():
     def __init__(self):
         self.win = 0
