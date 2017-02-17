@@ -9,11 +9,7 @@ urlLOGIN = 'http://www.saltybet.com/authenticate?signin=1'
 urlBET = 'http://www.saltybet.com/ajax_place_bet.php'
 urlSTATS = 'http://www.saltybet.com/ajax_get_stats.php'
 
-login_payload = {
-    'email': "mechanicfreak440@gmail.com",
-    'pword': 'lolice440',
-    'authenticate': 'signin'
-    }
+login_payload = {}
 bet_payload = {
     'selectedplayer': 'player1',
     'wager': '100',
@@ -37,10 +33,13 @@ headers = {
 def saveBettingData():
     with open('betting_data.pickle','wb') as f:
         pickle.dump(betting_data, f)
+        f.close()
 
 def openBettingData():
     with open('betting_data.pickle', 'rb') as f:
-        return pickle.load(f)
+        betting_data = pickle.load(f)
+        f.close()
+        return betting_data
 
 def waitForMatchEnd(s):
     print("\nWaiting for bet start")
@@ -107,6 +106,13 @@ def bet(p1,p2):
     else:
         bet_payload['selectedplayer'] = 'player2'
         
+
+
+
+with open('leechy.key', 'r') as f:
+    data = f.read().split(',')
+    login_payload = {data[0]:data[1],data[2]:data[3],data[4]:data[5]}
+
 
 betting_data = openBettingData()
 
