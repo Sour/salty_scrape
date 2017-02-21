@@ -25,7 +25,7 @@ class Character():
         else:
             self.avg_win = time
 
-    def print(self):
+    def _print(self):
         print("wins:",self.win)
         print("losses:",self.loss)
         print("beat:",self.won)
