@@ -87,82 +87,62 @@ def bet(p1,p2):
     p2_games_played = p2.loss + p2.win
     p1_confidence = 0
     p2_confidence = 0
-    d_avg_loss = 100
-    d_avg_win = 200
-    if p1_games_played > 0 and p2_games_played > 0:
-        #1000 confidence if match has occured before.
-        if p2 in p1.won and p1 not in p2.won:
-            print("p1 -> 1000")
-            p1_confidence += 1000
-        elif p1 in p2.won and p2 not in p1.won:
-            print("p2 -> 1000")
-            p2_confidence += 1000
-        
-        if p1.win != 0 and p1.loss != 0:
-            p1_confidence += (p1.avg_loss / p1.avg_win) * 200
 
-        elif p1.win == 0:
-            p1_confidence += (p1.avg_loss / d_avg_win) * 200
-            
-        elif p1.loss == 0:
-            p1_confidence += (d_avg_loss / p1.avg_win) * 200
+    #1000 confidence if match has occured before.
+    if p2 in p1.won and p1 not in p2.won:
+        print("p1 -> 1000")
+        p1_confidence += 1000
 
-        if p2.win != 0 and p2.loss != 0:
-            p2_confidence += (p2.avg_loss / p2.avg_win) * 200
-            
-        elif p2.win == 0:
-            p2_confidence += (p2.avg_loss / d_avg_win) * 200
-            
-        elif p2.loss == 0:
-            p2_confidence += (d_avg_loss / p2.avg_win) * 200
+    if p1 in p2.won and p2 not in p1.won:
+        print("p2 -> 1000")
+        p2_confidence += 1000
 
-        p1_confidence += (p1.win / p1_games_played) * 500
-        p2_confidence += (p2.win / p2_games_played) * 500
-
-    elif p1_games_played > 0 and p2_games_played == 0:
-
-        if p1.win != 0 and p1.loss != 0:
-            p1_confidence += (p1.avg_loss / p1.avg_win) * 200
-
-        if p1.win != 0 and p1.loss != 0:
-            p1_confidence += (p1.avg_loss / p1.avg_win) * 200
-
-        elif p1.win == 0:
-            p1_confidence += (p1.avg_loss / d_avg_win) * 200
-            
-        elif p1.loss == 0:
-            p1_confidence += (d_avg_loss / p1.avg_win) * 200
-        p2_confidence = 500
-        
-
-    elif p2_games_played > 0 and p1_games_played == 0:
-        if p2.win != 0 and p2.loss != 0:
-            p2_confidence += (p2.avg_loss / p2.avg_win) * 200
-
-        if p2.win != 0 and p2.loss != 0:
-            p2_confidence += (p2.avg_loss / p2.avg_win) * 200
-            
-        elif p2.win == 0:
-            p2_confidence += (p2.avg_loss / d_avg_win) * 200
-            
-        elif p2.loss == 0:
-            p2_confidence += (d_avg_loss / p2.avg_win) * 200
-        p1_confidence = 500
-
+    if p1_games_played > 0:
+        p1_pct = p1.win / p1_games_played
     else:
-         p1_confidence = 500
-         p2_confidence = 500
+        p1_pct = 0.5
 
-    print("p1 Confidence: ", p1_confidence)
-    print("p2 Confidence: ", p2_confidence)
+    if p2_games_played > 0:
+        p2_pct = p2.win / p2_games_played
+    else:
+        p2_pct = 0.5
+
+    if p1.avg_win != 0:
+        p1_a_win = abs( (300 - p1.avg_win) / 300 )
+    else:
+        p1_a_win = 0.5
+
+    if p2.avg_win != 0:
+        p2_a_win = abs( (300 - p2.avg_win) / 300 )
+    else:
+        p2_a_win = 0.5
+        
+    if p1.avg_loss != 0:
+        p1_a_loss = p1.loss / 300
+    else:
+        p1_a_loss = 0.5
+
+    if p2.avg_loss != 0:
+        p2_a_loss = p2.loss / 300
+    else:
+        p2_a_loss = 0.5
+
+    p1_confidence += p1_pct * 700
+    p1_confidence += p1_a_win * 150
+    p1_confidence += p1_a_loss * 150
+
+    p2_confidence += p2_pct * 700
+    p2_confidence += p2_a_win * 150
+    p2_confidence += p2_a_loss * 150 
+
+    print("p1 Confidence: ", p1_confidence,"p2 Confidence: ", p2_confidence)
     
     if p1_confidence >= p2_confidence:
         bet_payload['selectedplayer'] = 'player1'
-        bet_payload['wager'] = 1000
-
     else:
         bet_payload['selectedplayer'] = 'player2'
-        bet_payload['wager'] = 1000
+
+    bet_payload['wager'] = 1000
 
 with open('leechy.key', 'r') as f:
     data = f.read().split(',')
