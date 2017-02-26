@@ -1,6 +1,7 @@
 import requests, time, pickle
 from lxml import html
 from lib.salty_elo import expectedScore, getNewRating, winProbability
+from character import Character
 
 urlJSON = "http://www.saltybet.com/state.json"
 urlWEB = "http://www.saltybet.com/"
@@ -30,22 +31,31 @@ headers = {
     'Cookie': '__cfduid=d9298001d3c60b3bc2b5d51465e8b7b241486695449; PHPSESSID=ekpuf9gt5pq9boggvvgakkact6'
     }
 
+def getJSON():
+    try:
+        data = requests.get(urlJSON).json()
+    except ValueError:
+        print(ValueError);
+        data = requests.get(urlJSON).json()
+    
+    return data
+
 def saveBettingData(betting_data):
-    with open('betting_data_elo.pickle','wb') as f:
+    with open('betting_data_v2.pickle','wb') as f:
         pickle.dump(betting_data, f)
         f.close()
 
 def openBettingData():
-    with open('betting_data_elo.pickle', 'rb') as f:
+    with open('betting_data_v2.pickle', 'rb') as f:
         betting_data = pickle.load(f)
         f.close()
         return betting_data
 
 def waitForMatchEnd(s):
     print("\nWaiting for bet start")
-    data = requests.get(urlJSON).json()
+    data = getJSON()
     while data['status'] == 'locked':
-        data = requests.get(urlJSON).json()
+        data = getJSON()
         time.sleep(2)
     time.sleep(3)
     data['time'] = time.time()
@@ -53,9 +63,9 @@ def waitForMatchEnd(s):
 
 def waitForMatchStart():
     print("\nWaiting for match start")
-    data = requests.get(urlJSON).json()
+    data = getJSON()
     while data['status'] != 'locked':
-        data = requests.get(urlJSON).json()
+        data = getJSON()
         time.sleep(2)
     return time.time()
 
@@ -109,6 +119,8 @@ def findCommonMatches(p1, p2,betting_data):
     return 0
 
 def bet(p1,p2,betting_data):
+    
+    
     p1_games_played = p1.loss + p1.win
     p2_games_played = p2.loss + p2.win
     p1_confidence = 0
@@ -178,6 +190,7 @@ def bet(p1,p2,betting_data):
 
     bet_payload['wager'] = 1000
 
+
 with open('leechy.key', 'r') as f:
     data = f.read().split(',')
     login_payload = {data[0]:data[1],data[2]:data[3],data[4]:data[5]}
@@ -196,39 +209,44 @@ results = s.get(urlLOGIN)
 results = s.post(urlLOGIN, login_payload, dict(referer = urlLOGIN))
 
 data = waitForMatchEnd(s)
-data = requests.get(urlJSON).json()
+data = getJSON()
 p1 = data['p1name']
 p2 = data['p2name']
 
 if p1 not in betting_data:
-    betting_data[p1] = 1000
+    betting_data[p1] = Character()
 if p2 not in betting_data:
-    betting_data[p2] = 1000
+    betting_data[p2] = Character()
 
 while(True):
     
-    data = requests.get(urlJSON).json()
+    data = getJSON()
     results = s.get(urlWEB)
     
     p1 = data['p1name']
     p2 = data['p2name']
     
     if p1 not in betting_data:
-        betting_data[p1] = 1000
+        betting_data[p1] = Character()
     if p2 not in betting_data:
-        betting_data[p2] = 1000
+        betting_data[p2] = Character()
 
     
 
-    print("\n",p1,betting_data[p1],p2,betting_data[p2])
-    p1_es,p2_es = expectedScore(betting_data[p1],betting_data[p2])
+    print(p1)
+    betting_data[p1]._print()
+    print(p2)
+    betting_data[p2]._print()
 
-    if betting_data[p1] >= betting_data[p2]:
+    p1_es,p2_es = expectedScore(betting_data[p1].elo,betting_data[p2].elo)
+    balance = int(getBalance(results).replace(',',''))
+    balance = balance / 30
+    if betting_data[p1].elo >= betting_data[p2].elo:
         bet_payload['selectedplayer'] = 'player1'
-        bet_payload['wager'] = int(1000 * winProbability(betting_data[p1],betting_data[p2]))
+        bet_payload['wager'] = int(balance * winProbability(betting_data[p1].elo,betting_data[p2].elo) - (0.30*balance))
     else:
         bet_payload['selectedplayer'] = 'player2'
-        bet_payload['wager'] = int(1000 * winProbability(betting_data[p2],betting_data[p1]))
+        bet_payload['wager'] = int(balance * winProbability(betting_data[p2].elo,betting_data[p1].elo) - (0.30*balance))
 
     if isTourny(data):
         bet_payload['wager'] = int(getBalance(results).replace(',',''))
@@ -253,19 +271,29 @@ while(True):
     results = s.get(urlWEB)
 
     games += 1
+
     if data['status'] == '1':   
-        betting_data[p1],betting_data[p2] = getNewRating(betting_data[p1],betting_data[p2],p1_es,p2_es, 1,time_end-time_start)
+        betting_data[p1].elo,betting_data[p2].elo = getNewRating(betting_data[p1].elo,betting_data[p2].elo,p1_es,p2_es, 1,time_end-time_start)
+        betting_data[p1]._won(p2,time_end-time_start)
+        betting_data[p2]._lost(p1,time_end-time_start)
         print(p1," won!")
         if bet_payload['selectedplayer'] == 'player1':
             wins += 1
             
                
     if data['status'] == '2':
-        betting_data[p1],betting_data[p2] = getNewRating(betting_data[p1],betting_data[p2],p1_es,p2_es, 0,time_end-time_start)
+        betting_data[p1].elo,betting_data[p2].elo = getNewRating(betting_data[p1].elo,betting_data[p2].elo,p1_es,p2_es, 0,time_end-time_start)
+        betting_data[p2]._won(p1,time_end-time_start)
+        betting_data[p1]._lost(p2,time_end-time_start)
         print(p2," won!")
         if bet_payload['selectedplayer'] == 'player2':
             wins += 1
-    print("\n",p1,betting_data[p1],p2,betting_data[p2])
+
+    print(p1)
+    betting_data[p1]._print()
+    print(p2)
+    betting_data[p2]._print()
+    
     print("wins:",wins," games:",games, "PCT: ", wins/games)
 
     saveBettingData(betting_data)

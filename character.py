@@ -1,3 +1,5 @@
+from lib.salty_elo import expectedScore, getNewRating
+
 class Character():
     def __init__(self):
         self.win = 0
@@ -6,6 +8,7 @@ class Character():
         self.lost = []
         self.avg_win = 0
         self.avg_loss = 0
+        self.elo = 1000
 
     def _lost(self, character, time):
         self.loss += 1
@@ -32,8 +35,6 @@ class Character():
         print("lost:",self.lost)
         print("avg win time:",self.avg_win)
         print("avg loss time:",self.avg_loss)
+        print("elo:",self.elo)
         print("\n")
-
-    
-    
     
