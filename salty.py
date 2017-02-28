@@ -34,8 +34,8 @@ headers = {
 def getJSON():
     try:
         data = requests.get(urlJSON).json()
-    except ValueError:
-        print(ValueError);
+    except requests.exceptions.RequestException as e:
+        print(e);
         data = requests.get(urlJSON).json()
     
     return data
@@ -196,9 +196,9 @@ with open('leechy.key', 'r') as f:
     login_payload = {data[0]:data[1],data[2]:data[3],data[4]:data[5]}
 
 
+
 wins = 0
 games = 0
-
 
 betting_data = openBettingData()
 
@@ -230,8 +230,6 @@ while(True):
         betting_data[p1] = Character()
     if p2 not in betting_data:
         betting_data[p2] = Character()
-
-    
 
     print(p1)
     betting_data[p1]._print()
@@ -276,7 +274,7 @@ while(True):
         betting_data[p1].elo,betting_data[p2].elo = getNewRating(betting_data[p1].elo,betting_data[p2].elo,p1_es,p2_es, 1,time_end-time_start)
         betting_data[p1]._won(p2,time_end-time_start)
         betting_data[p2]._lost(p1,time_end-time_start)
-        print(p1," won!")
+        print(p1,"won!")
         if bet_payload['selectedplayer'] == 'player1':
             wins += 1
             
@@ -285,7 +283,7 @@ while(True):
         betting_data[p1].elo,betting_data[p2].elo = getNewRating(betting_data[p1].elo,betting_data[p2].elo,p1_es,p2_es, 0,time_end-time_start)
         betting_data[p2]._won(p1,time_end-time_start)
         betting_data[p1]._lost(p2,time_end-time_start)
-        print(p2," won!")
+        print(p2,"won!")
         if bet_payload['selectedplayer'] == 'player2':
             wins += 1
 
