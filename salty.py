@@ -34,8 +34,8 @@ headers = {
 def getJSON():
     try:
         data = requests.get(urlJSON).json()
-    except requests.exceptions.RequestException as e:
-        print(e);
+    except:
+        print("emptyJSON retry")
         data = requests.get(urlJSON).json()
     
     return data
@@ -213,6 +213,10 @@ data = getJSON()
 p1 = data['p1name']
 p2 = data['p2name']
 
+
+results = s.get(urlWEB)
+start_money = int(getBalance(results).replace(',',''))
+
 if p1 not in betting_data:
     betting_data[p1] = Character()
 if p2 not in betting_data:
@@ -251,7 +255,7 @@ while(True):
         print("in a tourny")
 
     if isExhib(data):
-        bet_payload['wager'] = 0
+        bet_payload['wager'] = 1000
         print("Exhib match")
 
     print("\nSent POST: ",bet_payload)
@@ -278,7 +282,6 @@ while(True):
         if bet_payload['selectedplayer'] == 'player1':
             wins += 1
             
-               
     if data['status'] == '2':
         betting_data[p1].elo,betting_data[p2].elo = getNewRating(betting_data[p1].elo,betting_data[p2].elo,p1_es,p2_es, 0,time_end-time_start)
         betting_data[p2]._won(p1,time_end-time_start)
@@ -292,7 +295,7 @@ while(True):
     print(p2)
     betting_data[p2]._print()
     
-    print("wins:",wins," games:",games, "PCT: ", wins/games)
+    print("wins:",wins," games:",games, "PCT: ", wins/games, "profit: ", int(getBalance(results).replace(',','')) - start_money)
 
     saveBettingData(betting_data)
     print("---------------------------------------------------------")
