@@ -2,21 +2,19 @@
 ELO_DEFAULT = 1000
 K = 35
 
-def expectedScore(p1,p2):
+def expectedScore(player1, player2):
+    p1ExpectedScore = 1 / (1 + 10 ** ((player2 - player1) / 400))
+    p2ExpectedScore = 1 / (1 + 10 ** ((player1 - player2) / 400))
 
-    return 1 / (1 + 10**((p2-p1)/400)), 1 / (1 + 10**((p1-p2)/400))
+    return p1ExpectedScore
 
-def getNewRating(p1,p2,p1_es,p2_es,win,time):
-    #k scalar for p1 
-    k1 = 1/(p1/2400)
+def getNewRating(player1, p1ExpectedScore, win, time):  
+    player1K = 1 / (p1 / 2400)
+    k = (150 / time) * 20
 
-    #k scalar for p2
-    k2 = 1/(p2/2400)
+    newPlayer1Elo = (player1 + (k*player1K) * (int(win) - p1ExpectedScore))
 
-    #k scalar based on time
-    k = 150/time * 20
+    return newPlayer1Elo
 
-    return (p1 + (k*k1) * (int(win) - p1_es)), (p2 + (k*k2) * (abs(int(win)-1) - p2_es))
-
-def winProbability(p1,p2):
-    return 1/(1+10**((p2-p1)/400))
+def winProbability(player1, player2):   
+    return (1 / (1 + 10 ** ((player2 - player1) / 400)))

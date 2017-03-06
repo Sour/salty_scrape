@@ -1,6 +1,8 @@
 import requests, time, pickle
 from lxml import html
+
 from lib.salty_elo import expectedScore, getNewRating, winProbability
+from lib.salty_file_io import saveBettingData, loadBettingData, loadLoginCredentials
 from character import Character
 
 urlJSON = "http://www.saltybet.com/state.json"
@@ -72,6 +74,12 @@ def waitForMatchStart():
 def getBalance(r):
     tree = html.fromstring(r.content)
     return tree.xpath('//span[@class="dollar"]/text()')[0]
+
+def getRatio(data):
+    p1_total = data['p1total']
+    p2_total = data['p2total']
+
+    return p1_total, p2_total
 
 def isTourny(data):
 
@@ -196,7 +204,6 @@ with open('leechy.key', 'r') as f:
     login_payload = {data[0]:data[1],data[2]:data[3],data[4]:data[5]}
 
 
-
 wins = 0
 games = 0
 
@@ -243,11 +250,25 @@ while(True):
     p1_es,p2_es = expectedScore(betting_data[p1].elo,betting_data[p2].elo)
     balance = int(getBalance(results).replace(',',''))
     balance = balance / 30
+    
+    p1_total,p2_total = getRatio(data)
+
+    match_total = int(p1_total.replace(',','')) + int(p2_total.replace(',',''))
+
+
     if betting_data[p1].elo >= betting_data[p2].elo:
         bet_payload['selectedplayer'] = 'player1'
-        bet_payload['wager'] = int(balance * winProbability(betting_data[p1].elo,betting_data[p2].elo) - (0.30*balance))
+        bet_amount = int(balance * winProbability(betting_data[p1].elo,betting_data[p2].elo) - (0.30*balance))
+        if match_total != 0 and (bet_amount/ match_total) > 0.1:
+            bet_amount = min(bet_amount, 0.1 * match_total)
+
+        bet_payload['wager'] = bet_amount
     else:
         bet_payload['selectedplayer'] = 'player2'
+        bet_amount = int(balance * winProbability(betting_data[p2].elo,betting_data[p1].elo) - (0.30*balance))
+        if match_total != 0 and (bet_amount / match_total) > 0.1:
+            bet_amount = min(bet_amount, 0.1 * match_total)
+    
         bet_payload['wager'] = int(balance * winProbability(betting_data[p2].elo,betting_data[p1].elo) - (0.30*balance))
 
     if isTourny(data):
