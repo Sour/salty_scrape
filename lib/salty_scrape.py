@@ -109,8 +109,8 @@ def bet(session, betting_data):
     player2 = data['p2name']
 
     balance = getBalance(session)
-    #40th of total balance will be later modified by win%
-    bet_amount = balance / 50
+    #50th of total balance will be later modified by win%
+    bet_amount = min(balance / 50, 100000)
 
     #add players to db if they do not exist yet
     if player1 not in betting_data:
